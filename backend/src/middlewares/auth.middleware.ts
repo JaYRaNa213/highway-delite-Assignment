@@ -7,7 +7,7 @@ export interface AuthRequest extends Request {
     _id: string;
     email: string;
     name: string;
-    signupMethod: 'email' | 'google';
+    signupMethod: 'email' | 'google' | 'github'; // ✅ expanded
   };
 }
 
@@ -40,12 +40,12 @@ export const authenticateToken = async (
       return;
     }
 
-    // Add user info to request
+    // Add user info to request (with fallback for old records)
     req.user = {
       _id: user._id.toString(),
       email: user.email,
       name: user.name,
-      signupMethod: user.signupMethod,
+      signupMethod: user.signupMethod ?? 'email', // ✅ fallback avoids undefined
     };
 
     next();
