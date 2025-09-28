@@ -1,7 +1,9 @@
 import axios, { AxiosResponse } from 'axios';
 import { AuthResponse, NotesResponse, NoteResponse, ApiError } from '../types';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+// Use environment variable for API URL, fallback to localhost for development
+const API_BASE_URL = import.meta.env.VITE_API_URL || 
+  (import.meta.env.DEV ? 'http://localhost:5000/api' : 'https://highway-d.onrender.com/api');
 
 // Create axios instance
 const api = axios.create({
@@ -43,23 +45,13 @@ api.interceptors.response.use(
 
 // Auth API
 export const authAPI = {
-  signup: async (email: string, name: string): Promise<AuthResponse> => {
-    const response = await api.post('/auth/signup', { email, name });
+  signup: async (email: string, name: string, password: string): Promise<AuthResponse> => {
+    const response = await api.post('/auth/signup', { email, name, password });
     return response.data;
   },
 
-  verifyOTP: async (email: string, otp: string): Promise<AuthResponse> => {
-    const response = await api.post('/auth/verify-otp', { email, otp });
-    return response.data;
-  },
-
-  login: async (email: string, otp: string): Promise<AuthResponse> => {
-    const response = await api.post('/auth/login', { email, otp });
-    return response.data;
-  },
-
-  requestOTP: async (email: string): Promise<{ success: boolean; message: string }> => {
-    const response = await api.post('/auth/request-otp', { email });
+  login: async (email: string, password: string): Promise<AuthResponse> => {
+    const response = await api.post('/auth/login', { email, password });
     return response.data;
   },
 };

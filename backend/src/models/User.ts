@@ -4,11 +4,7 @@ export interface IUser extends Document {
   _id: string;
   email: string;
   name: string;
-  signupMethod: 'email' | 'google';
-  googleId?: string;
-  isEmailVerified: boolean;
-  otpCode?: string;
-  otpExpires?: Date;
+  password: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -26,24 +22,10 @@ const UserSchema: Schema = new Schema({
     required: true,
     trim: true,
   },
-  signupMethod: {
+  password: {
     type: String,
-    enum: ['email', 'google'],
     required: true,
-  },
-  googleId: {
-    type: String,
-    sparse: true, // Allows multiple null values
-  },
-  isEmailVerified: {
-    type: Boolean,
-    default: false,
-  },
-  otpCode: {
-    type: String,
-  },
-  otpExpires: {
-    type: Date,
+    minlength: 5,
   },
 }, {
   timestamps: true,
@@ -51,6 +33,5 @@ const UserSchema: Schema = new Schema({
 
 // Index for faster queries
 UserSchema.index({ email: 1 });
-UserSchema.index({ googleId: 1 });
 
 export default mongoose.model<IUser>('User', UserSchema);

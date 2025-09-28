@@ -37,6 +37,9 @@ app.use(limiter);
 const allowedOrigins = [
   "http://localhost:5173",
   "https://highway-delite-assignment-ten.vercel.app",
+  process.env.FRONTEND_URL || "https://highway-delite-assignment-ten.vercel.app",
+  // Allow any Vercel preview deployments
+  /^https:\/\/.*\.vercel\.app$/,
 ];
 
 // If you prefer .env-based config, you can set:
@@ -49,7 +52,17 @@ app.use(
       // Allow requests with no origin (e.g. mobile apps, curl, Postman)
       if (!origin) return callback(null, true);
 
-      if (allowedOrigins.includes(origin)) {
+      // Check if origin matches any allowed origin (string or regex)
+      const isAllowed = allowedOrigins.some(allowedOrigin => {
+        if (typeof allowedOrigin === 'string') {
+          return allowedOrigin === origin;
+        } else if (allowedOrigin instanceof RegExp) {
+          return allowedOrigin.test(origin);
+        }
+        return false;
+      });
+
+      if (isAllowed) {
         return callback(null, true);
       }
       return callback(new Error("Not allowed by CORS"));
