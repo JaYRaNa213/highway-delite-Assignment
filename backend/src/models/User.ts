@@ -6,7 +6,7 @@ export interface IUser extends Document {
   email: string;
   name: string;
   password: string;
-  signupMethod?: 'email' | 'google' | 'github'; // ✅ added
+  signupMethod?: 'email' | 'google'; // ✅ added
   createdAt: Date;
   updatedAt: Date;
 }
