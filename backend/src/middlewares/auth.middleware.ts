@@ -7,7 +7,7 @@ export interface AuthRequest extends Request {
     _id: string;
     email: string;
     name: string;
-    signupMethod: 'email' | 'google' | 'github'; // ✅ expanded
+    signupMethod: 'email' | 'google'; // ✅ expanded
   };
 }
 
