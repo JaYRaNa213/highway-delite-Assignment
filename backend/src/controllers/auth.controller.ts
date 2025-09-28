@@ -15,6 +15,11 @@ const verifyOTPSchema = Joi.object({
   otp: Joi.string().length(6).pattern(/^\d+$/).required(),
 });
 
+// Request OTP schema (email only)
+const requestOTPSchema = Joi.object({
+  email: Joi.string().email().required(),
+});
+
 const loginSchema = Joi.object({
   email: Joi.string().email().required(),
   otp: Joi.string().length(6).pattern(/^\d+$/).required(),
@@ -261,7 +266,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 // Request new OTP
 export const requestOTP = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { error, value } = signupSchema.validate(req.body);
+    const { error, value } = requestOTPSchema.validate(req.body);
     if (error) {
       res.status(400).json({
         success: false,

@@ -38,7 +38,25 @@ const Signup: React.FC = () => {
         toast.success('OTP sent to your email!');
       }
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Signup failed');
+      const message = error.response?.data?.message as string | undefined;
+      // If user already exists, fall back to request OTP and continue to verify step
+      if (message && message.toLowerCase().includes('user already exists')) {
+        try {
+          const req = await authAPI.requestOTP(data.email);
+          if (req.success) {
+            setEmail(data.email);
+            setName(data.name);
+            setStep('verify');
+            toast.success('Account exists. OTP sent to your email!');
+          } else {
+            toast.error('Failed to send OTP');
+          }
+        } catch (e: any) {
+          toast.error(e.response?.data?.message || 'Failed to send OTP');
+        }
+      } else {
+        toast.error(message || 'Signup failed');
+      }
     } finally {
       setIsLoading(false);
     }
