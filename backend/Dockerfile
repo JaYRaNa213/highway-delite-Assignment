@@ -1,20 +1,27 @@
-# Use Node.js 18 Alpine image
-FROM node:18-alpine
+# Build stage
+FROM node:18-alpine AS builder
 
-# Set working directory
 WORKDIR /app
 
-# Copy package files
+# Copy package files and install all deps (including dev for tsc)
 COPY package*.json ./
+RUN npm ci
 
-# Install dependencies
+# Copy source and build
+COPY . .
+RUN npm run build
+
+# Runtime stage
+FROM node:18-alpine AS runner
+
+WORKDIR /app
+
+# Install only production dependencies
+COPY package*.json ./
 RUN npm ci --only=production
 
-# Copy source code
-COPY . .
-
-# Build the application
-RUN npm run build
+# Copy compiled output from builder
+COPY --from=builder /app/dist ./dist
 
 # Expose port
 EXPOSE 5000
