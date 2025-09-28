@@ -16,7 +16,7 @@ const UserSchema: Schema = new Schema(
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     name: { type: String, required: true, trim: true },
     password: { type: String, required: true, minlength: 5 },
-    signupMethod: { type: String, enum: ['email', 'google', 'github'], default: 'email' }, // ✅ added
+    signupMethod: { type: String, enum: ['email', 'google'], default: 'email' }, // ✅ added
   },
   { timestamps: true }
 );
