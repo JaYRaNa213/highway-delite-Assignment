@@ -51,10 +51,11 @@ export const signup = async (req: Request, res: Response): Promise<void> => {
 
     // Create user
     const user = new User({
-      email,
-      name,
-      password
-    });
+  email,
+  name,
+  password: hashedPassword,
+  signupMethod: 'email',  // ✅ now stored in DB
+});
 
     await user.save();
 
