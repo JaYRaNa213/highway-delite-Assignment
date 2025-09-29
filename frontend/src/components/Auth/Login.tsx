@@ -6,45 +6,52 @@ import { authAPI } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import toast from 'react-hot-toast';
 
-interface RequestOtpFormData {
+interface LoginFormData {
   email: string;
-}
-
-interface VerifyOtpFormData {
   otp: string;
 }
 
 const Login: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
-  const [step, setStep] = useState<'email' | 'otp'>('email');
   const [email, setEmail] = useState('');
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  const emailForm = useForm<RequestOtpFormData>();
-  const otpForm = useForm<VerifyOtpFormData>();
+  const form = useForm<LoginFormData>();
 
-  const handleSendOtp = async (data: RequestOtpFormData) => {
+  const handleSendOtp = async () => {
+    const valid = await form.trigger(['email']);
+    if (!valid) return;
+    const values = form.getValues();
     setIsLoading(true);
     try {
-      const response = await authAPI.sendOtp(data.email);
+      const response = await authAPI.sendOtp(values.email);
       if (response.success) {
-        setEmail(data.email);
-        setStep('otp');
+        setEmail(values.email);
         toast.success('OTP sent to your email');
       }
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to send OTP');
+      const msg = error.response?.data?.message || 'Failed to send OTP';
+      toast.error(msg);
+      if (msg?.toLowerCase().includes('name required') || msg?.toLowerCase().includes('signup')) {
+        toast('No account found. Please sign up first.', { icon: 'ℹ️' });
+        navigate('/');
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleVerifyOtp = async (data: VerifyOtpFormData) => {
+  // Single handler used for Send/Resend button
+
+  const handleVerifyOtp = async () => {
+    const valid = await form.trigger(['email', 'otp']);
+    if (!valid) return;
+    const values = form.getValues();
     setIsVerifying(true);
     try {
-      const response = await authAPI.verifyOtp(email, data.otp);
+      const response = await authAPI.verifyOtp(values.email, values.otp);
       if (response.success && response.data) {
         login(response.data.user, response.data.token);
         toast.success('Logged in successfully');
@@ -82,112 +89,88 @@ const Login: React.FC = () => {
           </div>
 
           <div className="card-content">
-            {step === 'email' ? (
-              <form onSubmit={emailForm.handleSubmit(handleSendOtp)} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-secondary-700 mb-2">
-                    Email Address
-                  </label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-secondary-400 h-4 w-4" />
-                    <input
-                      {...emailForm.register('email', {
-                        required: 'Email is required',
-                        pattern: {
-                          value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                          message: 'Invalid email address',
-                        },
-                      })}
-                      type="email"
-                      className="input pl-10"
-                      placeholder="Enter your email"
-                      autoComplete="email"
-                    />
-                  </div>
-                  {emailForm.formState.errors.email && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {emailForm.formState.errors.email.message}
-                    </p>
-                  )}
+            <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
+              <div>
+                <label className="block text-sm font-medium text-secondary-700 mb-2">
+                  Email Address
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-secondary-400 h-4 w-4" />
+                  <input
+                    {...form.register('email', {
+                      required: 'Email is required',
+                      pattern: {
+                        value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                        message: 'Invalid email address',
+                      },
+                    })}
+                    type="email"
+                    className="input pl-10"
+                    placeholder="Enter your email"
+                    autoComplete="email"
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
                 </div>
+                {form.formState.errors.email && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {form.formState.errors.email.message}
+                  </p>
+                )}
+              </div>
 
+              <div>
+                <label className="block text-sm font-medium text-secondary-700 mb-2">
+                  Enter OTP
+                </label>
+                <div className="relative">
+                  <KeyRound className="absolute left-3 top-1/2 transform -translate-y-1/2 text-secondary-400 h-4 w-4" />
+                  <input
+                    {...form.register('otp', {
+                      required: 'OTP is required',
+                      pattern: { value: /^\d{6}$/g, message: 'OTP must be 6 digits' },
+                    })}
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={6}
+                    className="input pl-10 tracking-widest"
+                    autoComplete="one-time-code"
+                    placeholder="Enter OTP"
+                  />
+                </div>
+                {form.formState.errors.otp && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {form.formState.errors.otp.message}
+                  </p>
+                )}
+              </div>
+
+              <div className="flex items-center justify-between">
                 <button
-                  type="submit"
+                  type="button"
+                  onClick={handleSendOtp}
                   disabled={isLoading}
-                  className="btn btn-primary btn-lg w-full"
+                  className="text-primary-600 hover:text-primary-700 text-sm flex items-center"
                 >
-                  {isLoading ? (
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  ) : (
-                    <>
-                      Send OTP
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </>
-                  )}
+                  <RefreshCcw className="h-4 w-4 mr-1" /> Send / Resend OTP
                 </button>
-              </form>
-            ) : (
-              <form onSubmit={otpForm.handleSubmit(handleVerifyOtp)} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-secondary-700 mb-2">
-                    Enter OTP sent to {email}
-                  </label>
-                  <div className="relative">
-                    <KeyRound className="absolute left-3 top-1/2 transform -translate-y-1/2 text-secondary-400 h-4 w-4" />
-                    <input
-                      {...otpForm.register('otp', {
-                        required: 'OTP is required',
-                        pattern: { value: /^\d{6}$/g, message: 'OTP must be 6 digits' },
-                      })}
-                      type="text"
-                      inputMode="numeric"
-                      maxLength={6}
-                      className="input pl-10 tracking-widest"
-                      autoComplete="one-time-code"
-                      placeholder="123456"
-                    />
-                  </div>
-                  {otpForm.formState.errors.otp && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {otpForm.formState.errors.otp.message}
-                    </p>
-                  )}
-                </div>
+              </div>
 
-                <div className="flex items-center justify-between">
-                  <button
-                    type="button"
-                    onClick={() => setStep('email')}
-                    className="text-secondary-600 hover:text-secondary-800 text-sm"
-                  >
-                    Change email
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleResend}
-                    disabled={isLoading}
-                    className="text-primary-600 hover:text-primary-700 text-sm flex items-center"
-                  >
-                    <RefreshCcw className="h-4 w-4 mr-1" /> Resend OTP
-                  </button>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={isVerifying}
-                  className="btn btn-primary btn-lg w-full"
-                >
-                  {isVerifying ? (
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  ) : (
-                    <>
-                      Verify & Sign In
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </>
-                  )}
-                </button>
-              </form>
-            )}
+              <button
+                type="button"
+                onClick={handleVerifyOtp}
+                disabled={isVerifying}
+                className="btn btn-primary btn-lg w-full"
+              >
+                {isVerifying ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                ) : (
+                  <>
+                    Verify & Sign In
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </>
+                )}
+              </button>
+            </form>
           </div>
 
           <div className="card-footer">

@@ -30,8 +30,11 @@ export const sendOtp = async (req: Request, res: Response): Promise<Response> =>
     let user = await User.findOne({ email });
 
     if (!user) {
-      // Signup: create user even if name not provided (can be updated later)
-      user = new User({ email, name: name || '', signupMethod: "email" });
+      // New user: require name for first signup
+      if (!name || String(name).trim().length < 1) {
+        return res.status(400).json({ success: false, message: "Name required for signup" });
+      }
+      user = new User({ email, name: name.trim(), signupMethod: "email" });
     }
 
     // Generate OTP
