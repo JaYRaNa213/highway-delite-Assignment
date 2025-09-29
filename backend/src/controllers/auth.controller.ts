@@ -47,7 +47,8 @@ export const sendOtp = async (req: Request, res: Response): Promise<Response> =>
 
     // Send OTP email
     const mailOptions = {
-      from: `"Highway App" <${process.env.EMAIL_USER}>`, // must be verified sender
+      from: `"Highway App" <98134c003@smtp-brevo.com>`,
+ // must be verified sender
       to: email,
       subject: "Your OTP Code for Highway App",
       html: `

@@ -1,3 +1,6 @@
+
+import './config/env'; // loads .env immediately
+
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
