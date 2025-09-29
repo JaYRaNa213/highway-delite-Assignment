@@ -16,56 +16,64 @@ const otpSchema = Joi.object({
 });
 
 // ---------------------- SEND OTP ----------------------
+// ---------------------- SEND OTP ----------------------
 export const sendOtp = async (req: Request, res: Response): Promise<Response> => {
   try {
     const { email, name } = req.body;
 
-    // Validate email input
-    if (!email) return res.status(400).json({ success: false, message: 'Email required' });
+    // Basic validation
+    if (!email) {
+      return res.status(400).json({ success: false, message: "Email required" });
+    }
 
-    // Find existing user or create new
+    // Check user
     let user = await User.findOne({ email });
+
     if (!user) {
-      if (!name) return res.status(400).json({ success: false, message: 'Name required' });
-      user = new User({ email, name, signupMethod: 'email' });
+      // Signup flow → name is required
+      if (!name) {
+        return res.status(400).json({ success: false, message: "Name required for signup" });
+      }
+      user = new User({ email, name, signupMethod: "email" });
     }
 
     // Generate OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const otpExpires = new Date(Date.now() + 5 * 60 * 1000); // 5 min expiry
+    const otpExpires = new Date(Date.now() + 5 * 60 * 1000); // 5 min
 
     user.otp = otp;
     user.otpExpires = otpExpires;
     await user.save();
 
-    // Send OTP email (HTML)
+    // Send OTP email
     const mailOptions = {
-      from: '"Highway App" <no-reply@highwayapp.com>', // use verified sender
+      from: `"Highway App" <${process.env.EMAIL_USER}>`, // must be verified sender
       to: email,
-      subject: 'Your OTP Code for Highway App',
+      subject: "Your OTP Code for Highway App",
       html: `
         <div style="font-family: Arial, sans-serif; text-align: center; padding: 20px;">
           <h2 style="color: #333;">Your One-Time Password (OTP)</h2>
-          <p style="font-size: 16px;">Hi ${user.name},</p>
+          <p style="font-size: 16px;">Hi ${user.name || "User"},</p>
           <p style="font-size: 18px; font-weight: bold; background: #f2f2f2; padding: 10px; display: inline-block;">
             ${otp}
           </p>
           <p style="font-size: 14px; color: #555;">This OTP is valid for 5 minutes.</p>
-          <hr style="margin: 20px 0;">
-          <p style="font-size: 12px; color: #999;">If you did not request this, please ignore this email.</p>
         </div>
       `,
     };
 
-    const info = await transporter.sendMail(mailOptions);
-    console.log('✅ OTP Email sent info:', info);
+    await transporter.sendMail(mailOptions);
 
-    return res.status(200).json({ success: true, message: 'OTP sent' });
+    return res.status(200).json({
+      success: true,
+      message: user.isNew ? "OTP sent for signup" : "OTP sent for login",
+    });
   } catch (error: any) {
-    console.error('❌ Send OTP error:', error);
-    return res.status(500).json({ success: false, message: 'Failed to send OTP' });
+    console.error("❌ Send OTP error:", error);
+    return res.status(500).json({ success: false, message: "Failed to send OTP" });
   }
 };
+
 
 // ---------------------- VERIFY OTP ----------------------
 export const verifyOtp = async (req: Request, res: Response): Promise<Response> => {
