@@ -19,7 +19,7 @@ const Welcome: React.FC = () => {
     navigate('/login');
   };
 
-  const handleNoteCreated = (note: Note) => {
+  const handleNoteCreated = (_: Note) => {
     setNotesCount(prev => prev + 1);
   };
 

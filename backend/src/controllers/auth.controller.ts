@@ -4,7 +4,7 @@ import { generateToken } from '../config/jwt';
 import Joi from 'joi';
 import { transporter } from '../config/mailer';
 
-// Validation schemas
+// ---------------------- VALIDATION SCHEMAS ----------------------
 const signupSchema = Joi.object({
   email: Joi.string().email().required(),
   name: Joi.string().min(2).max(50).required(),
@@ -16,14 +16,14 @@ const otpSchema = Joi.object({
 });
 
 // ---------------------- SEND OTP ----------------------
-export const sendOtp = async (req: Request, res: Response) => {
+export const sendOtp = async (req: Request, res: Response): Promise<Response> => {
   try {
     const { email, name } = req.body;
 
-    // Validate input
+    // Validate email input
     if (!email) return res.status(400).json({ success: false, message: 'Email required' });
 
-    // Check if user exists or create
+    // Find existing user or create new
     let user = await User.findOne({ email });
     if (!user) {
       if (!name) return res.status(400).json({ success: false, message: 'Name required' });
@@ -32,7 +32,7 @@ export const sendOtp = async (req: Request, res: Response) => {
 
     // Generate OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const otpExpires = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes expiry
+    const otpExpires = new Date(Date.now() + 5 * 60 * 1000); // 5 min expiry
 
     user.otp = otp;
     user.otpExpires = otpExpires;
@@ -40,7 +40,7 @@ export const sendOtp = async (req: Request, res: Response) => {
 
     // Send OTP email (HTML)
     const mailOptions = {
-      from: '"Highway App" <jayrana0909@gmail.com>', // Proper sender
+      from: '"Highway App" <no-reply@highwayapp.com>', // use verified sender
       to: email,
       subject: 'Your OTP Code for Highway App',
       html: `
@@ -58,17 +58,17 @@ export const sendOtp = async (req: Request, res: Response) => {
     };
 
     const info = await transporter.sendMail(mailOptions);
-    console.log('Email sent info:', info);
+    console.log('✅ OTP Email sent info:', info);
 
-    res.status(200).json({ success: true, message: 'OTP sent' });
-  } catch (error) {
-    console.error('Send OTP error:', error);
-    res.status(500).json({ success: false, message: 'Failed to send OTP' });
+    return res.status(200).json({ success: true, message: 'OTP sent' });
+  } catch (error: any) {
+    console.error('❌ Send OTP error:', error);
+    return res.status(500).json({ success: false, message: 'Failed to send OTP' });
   }
 };
 
 // ---------------------- VERIFY OTP ----------------------
-export const verifyOtp = async (req: Request, res: Response) => {
+export const verifyOtp = async (req: Request, res: Response): Promise<Response> => {
   try {
     const { error, value } = otpSchema.validate(req.body);
     if (error) return res.status(400).json({ success: false, message: error.details[0].message });
@@ -82,7 +82,7 @@ export const verifyOtp = async (req: Request, res: Response) => {
     if (user.otp !== otp || user.otpExpires < new Date())
       return res.status(400).json({ success: false, message: 'Invalid or expired OTP' });
 
-    // Clear OTP
+    // Clear OTP after verification
     user.otp = null;
     user.otpExpires = null;
     await user.save();
@@ -90,13 +90,13 @@ export const verifyOtp = async (req: Request, res: Response) => {
     // Generate JWT
     const token = generateToken({ userId: user._id, email: user.email });
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: 'OTP verified',
       data: { token, user: { _id: user._id, email: user.email, name: user.name } },
     });
-  } catch (error) {
-    console.error('Verify OTP error:', error);
-    res.status(500).json({ success: false, message: 'Internal server error' });
+  } catch (error: any) {
+    console.error('❌ Verify OTP error:', error);
+    return res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
