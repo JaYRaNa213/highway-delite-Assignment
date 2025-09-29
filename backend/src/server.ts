@@ -33,17 +33,26 @@ app.use(rateLimit({
 // CORS
 const allowedOrigins = [
   "http://localhost:5173",
-  process.env.FRONTEND_URL || "",
-  /^https:\/\/.*\.vercel\.app$/
+  "https://highway-delite-assignment-ten.vercel.app",
 ];
+
 app.use(cors({
   origin: (origin, cb) => {
-    if (!origin) return cb(null, true);
-    const allowed = allowedOrigins.some(o => typeof o === 'string' ? o === origin : o instanceof RegExp && o.test(origin));
-    cb(allowed ? null : new Error('Not allowed by CORS'), allowed);
+    if (!origin) return cb(null, true); // allow Postman / curl
+    if (allowedOrigins.includes(origin)) {
+      return cb(null, true);
+    }
+    return cb(new Error("Not allowed by CORS"));
   },
   credentials: true,
 }));
+
+
+// app.use(cors({
+//   origin: "*",
+//   credentials: true,
+// }));
+
 
 // Health check
 app.get('/health', (req, res) => res.json({ success: true, message: 'Server running' }));
