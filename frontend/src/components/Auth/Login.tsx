@@ -122,37 +122,42 @@ const Login: React.FC = () => {
                 <label className="block text-sm font-medium text-secondary-700 mb-2">
                   Enter OTP
                 </label>
-                <div className="relative">
-                  <KeyRound className="absolute left-3 top-1/2 transform -translate-y-1/2 text-secondary-400 h-4 w-4" />
-                  <input
-                    {...form.register('otp', {
-                      required: 'OTP is required',
-                      pattern: { value: /^\d{6}$/g, message: 'OTP must be 6 digits' },
-                    })}
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={6}
-                    className="input pl-10 tracking-widest"
-                    autoComplete="one-time-code"
-                    placeholder="Enter OTP"
-                  />
+                <div className="flex gap-3">
+                  <div className="relative w-1/2">
+                    <KeyRound className="absolute left-3 top-1/2 transform -translate-y-1/2 text-secondary-400 h-4 w-4" />
+                    <input
+                      {...form.register('otp', {
+                        required: 'OTP is required',
+                        pattern: { value: /^\d{6}$/g, message: 'OTP must be 6 digits' },
+                      })}
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={6}
+                      className="input pl-10 tracking-widest"
+                      autoComplete="one-time-code"
+                      placeholder="Enter OTP"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleSendOtp}
+                    disabled={isLoading}
+                    className="btn btn-outline w-1/2"
+                  >
+                    {isLoading ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
+                    ) : (
+                      <div className="flex items-center justify-center">
+                        <RefreshCcw className="h-4 w-4 mr-2" /> Send OTP
+                      </div>
+                    )}
+                  </button>
                 </div>
                 {form.formState.errors.otp && (
                   <p className="text-red-500 text-xs mt-1">
                     {form.formState.errors.otp.message}
                   </p>
                 )}
-              </div>
-
-              <div className="flex items-center justify-between">
-                <button
-                  type="button"
-                  onClick={handleSendOtp}
-                  disabled={isLoading}
-                  className="text-primary-600 hover:text-primary-700 text-sm flex items-center"
-                >
-                  <RefreshCcw className="h-4 w-4 mr-1" /> Send / Resend OTP
-                </button>
               </div>
 
               <button
