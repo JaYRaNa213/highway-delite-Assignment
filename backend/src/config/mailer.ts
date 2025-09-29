@@ -1,8 +1,5 @@
 import nodemailer from 'nodemailer';
 
-import dotenv from 'dotenv';
-dotenv.config();
-
 // SMTP configuration via environment variables
 export const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST,
@@ -12,7 +9,7 @@ export const transporter = nodemailer.createTransport({
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
-  
+
 });
 
 // Verify connection at startup (logs only)
