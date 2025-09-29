@@ -1,5 +1,5 @@
 import axios, { AxiosResponse } from 'axios';
-import { AuthResponse, NotesResponse, NoteResponse, ApiError } from '../types';
+import { AuthResponse, NotesResponse, NoteResponse } from '../types';
 
 // Use environment variable for API URL, fallback to localhost for development
 const API_BASE_URL = import.meta.env.VITE_API_URL || 
@@ -45,13 +45,13 @@ api.interceptors.response.use(
 
 // Auth API
 export const authAPI = {
-  signup: async (email: string, name: string, password: string): Promise<AuthResponse> => {
-    const response = await api.post('/auth/signup', { email, name, password });
+  sendOtp: async (email: string, name?: string): Promise<{ success: boolean; message: string }> => {
+    const response = await api.post('/auth/send-otp', { email, name });
     return response.data;
   },
 
-  login: async (email: string, password: string): Promise<AuthResponse> => {
-    const response = await api.post('/auth/login', { email, password });
+  verifyOtp: async (email: string, otp: string): Promise<AuthResponse> => {
+    const response = await api.post('/auth/verify-otp', { email, otp });
     return response.data;
   },
 };
