@@ -7,7 +7,7 @@ import { transporter } from '../config/mailer';
 // ---------------------- VALIDATION SCHEMAS ----------------------
 const signupSchema = Joi.object({
   email: Joi.string().email().required(),
-  name: Joi.string().min(2).max(50).required(),
+  name: Joi.string().min(2).max(50).optional().allow(''),
 });
 
 const otpSchema = Joi.object({
@@ -30,11 +30,8 @@ export const sendOtp = async (req: Request, res: Response): Promise<Response> =>
     let user = await User.findOne({ email });
 
     if (!user) {
-      // Signup flow → name is required
-      if (!name) {
-        return res.status(400).json({ success: false, message: "Name required for signup" });
-      }
-      user = new User({ email, name, signupMethod: "email" });
+      // Signup: create user even if name not provided (can be updated later)
+      user = new User({ email, name: name || '', signupMethod: "email" });
     }
 
     // Generate OTP

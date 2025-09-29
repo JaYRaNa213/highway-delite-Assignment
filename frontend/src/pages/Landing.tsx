@@ -68,7 +68,7 @@ const Landing: React.FC = () => {
                 Sign In
               </button>
               <button
-                onClick={() => navigate('/signup')}
+                onClick={() => navigate('/')}
                 className="btn btn-primary btn-md"
               >
                 Get Started
@@ -92,7 +92,7 @@ const Landing: React.FC = () => {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button
-                onClick={() => navigate('/signup')}
+                onClick={() => navigate('/')}
                 className="btn btn-primary btn-lg px-8"
               >
                 Start Free Trial
@@ -182,7 +182,7 @@ const Landing: React.FC = () => {
             Join thousands of users who are already organizing their thoughts with Highway Delite.
           </p>
           <button
-            onClick={() => navigate('/signup')}
+            onClick={() => navigate('/')}
             className="btn bg-background text-foreground hover:bg-card btn-lg px-8"
           >
             Create Your Account
@@ -207,7 +207,7 @@ const Landing: React.FC = () => {
                 Sign In
               </button>
               <button
-                onClick={() => navigate('/signup')}
+                onClick={() => navigate('/')}
                 className="text-muted-foreground hover:text-foreground transition-colors"
               >
                 Sign Up

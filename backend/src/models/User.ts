@@ -14,7 +14,7 @@ export interface IUser extends Document {
 const UserSchema: Schema = new Schema(
   {
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
-    name: { type: String, required: true, trim: true },
+    name: { type: String, required: false, trim: true, default: '' },
     signupMethod: { type: String, enum: ['email', 'google'], default: 'email', required: true },
     otp: { type: String, default: null },
     otpExpires: { type: Date, default: null },

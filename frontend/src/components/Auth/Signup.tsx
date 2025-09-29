@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
-import { Mail, User, ArrowRight, RefreshCcw, KeyRound } from 'lucide-react';
+import { Mail, ArrowRight, RefreshCcw, KeyRound } from 'lucide-react';
 import { authAPI } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import toast from 'react-hot-toast';
 
-interface SignupInfoFormData {
+interface SignupEmailFormData {
   email: string;
-  name: string;
 }
 
 interface VerifyOtpFormData {
@@ -18,22 +17,20 @@ interface VerifyOtpFormData {
 const Signup: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
-  const [step, setStep] = useState<'info' | 'otp'>('info');
+  const [step, setStep] = useState<'email' | 'otp'>('email');
   const [email, setEmail] = useState('');
-  const [name, setName] = useState('');
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  const infoForm = useForm<SignupInfoFormData>();
+  const emailForm = useForm<SignupEmailFormData>();
   const otpForm = useForm<VerifyOtpFormData>();
 
-  const handleSendOtp = async (data: SignupInfoFormData) => {
+  const handleSendOtp = async (data: SignupEmailFormData) => {
     setIsLoading(true);
     try {
-      const response = await authAPI.sendOtp(data.email, data.name);
+      const response = await authAPI.sendOtp(data.email);
       if (response.success) {
         setEmail(data.email);
-        setName(data.name);
         setStep('otp');
         toast.success('OTP sent to your email');
       }
@@ -61,10 +58,10 @@ const Signup: React.FC = () => {
   };
 
   const handleResend = async () => {
-    if (!email || !name) return;
+    if (!email) return;
     setIsLoading(true);
     try {
-      const response = await authAPI.sendOtp(email, name);
+      const response = await authAPI.sendOtp(email);
       if (response.success) {
         toast.success('OTP resent');
       }
@@ -85,33 +82,8 @@ const Signup: React.FC = () => {
           </div>
 
           <div className="card-content">
-            {step === 'info' ? (
-              <form onSubmit={infoForm.handleSubmit(handleSendOtp)} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-secondary-700 mb-2">
-                    Full Name
-                  </label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-secondary-400 h-4 w-4" />
-                    <input
-                      {...infoForm.register('name', {
-                        required: 'Name is required',
-                        minLength: { value: 2, message: 'Name must be at least 2 characters' },
-                      })}
-                      type="text"
-                      className="input pl-10"
-                      placeholder="Enter your full name"
-                      onChange={(e) => setName(e.target.value)}
-                      autoComplete="name"
-                    />
-                  </div>
-                  {infoForm.formState.errors.name && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {infoForm.formState.errors.name.message}
-                    </p>
-                  )}
-                </div>
-
+            {step === 'email' ? (
+              <form onSubmit={emailForm.handleSubmit(handleSendOtp)} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-secondary-700 mb-2">
                     Email Address
@@ -119,7 +91,7 @@ const Signup: React.FC = () => {
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-secondary-400 h-4 w-4" />
                     <input
-                      {...infoForm.register('email', {
+                      {...emailForm.register('email', {
                         required: 'Email is required',
                         pattern: {
                           value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
@@ -129,13 +101,12 @@ const Signup: React.FC = () => {
                       type="email"
                       className="input pl-10"
                       placeholder="Enter your email"
-                      onChange={(e) => setEmail(e.target.value)}
                       autoComplete="email"
                     />
                   </div>
-                  {infoForm.formState.errors.email && (
+                  {emailForm.formState.errors.email && (
                     <p className="text-red-500 text-xs mt-1">
-                      {infoForm.formState.errors.email.message}
+                      {emailForm.formState.errors.email.message}
                     </p>
                   )}
                 </div>
@@ -186,10 +157,10 @@ const Signup: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <button
                     type="button"
-                    onClick={() => setStep('info')}
+                    onClick={() => setStep('email')}
                     className="text-secondary-600 hover:text-secondary-800 text-sm"
                   >
-                    Change info
+                    Change email
                   </button>
                   <button
                     type="button"

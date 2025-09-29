@@ -10,7 +10,7 @@ import Landing from './pages/Landing';
 // Protected Route Component
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated } = useAuth();
-  return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
+  return isAuthenticated ? <>{children}</> : <Navigate to="/" replace />;
 };
 
 // Public Route Component (redirect to welcome if authenticated)
@@ -30,9 +30,19 @@ function App() {
       <Router>
         <div className="App">
           <Routes>
-            {/* Landing Route */}
+            {/* Root shows Signup (as landing auth) */}
             <Route
               path="/"
+              element={
+                <PublicRoute>
+                  <Signup />
+                </PublicRoute>
+              }
+            />
+
+            {/* Marketing Landing page */}
+            <Route
+              path="/landing"
               element={
                 <LandingRoute>
                   <Landing />
