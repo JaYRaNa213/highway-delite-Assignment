@@ -1,151 +1,102 @@
 import { Request, Response } from 'express';
 import User from '../models/User';
 import { generateToken } from '../config/jwt';
-import bcrypt from 'bcryptjs';
 import Joi from 'joi';
+import { transporter } from '../config/mailer';
 
-
+// Validation schemas
 const signupSchema = Joi.object({
-
- 
-
   email: Joi.string().email().required(),
   name: Joi.string().min(2).max(50).required(),
-  password: Joi.string().min(5),
-  confirmPassword: Joi.string().optional(),  // if frontend sends it
 });
 
-
-const loginSchema = Joi.object({
+const otpSchema = Joi.object({
   email: Joi.string().email().required(),
-  password: Joi.string().required(),
+  otp: Joi.string().length(6).required(),
 });
 
-// Signup with email and password
-export const signup = async (req: Request, res: Response): Promise<void> => {
+// ---------------------- SEND OTP ----------------------
+export const sendOtp = async (req: Request, res: Response) => {
   try {
-    const { error, value } = signupSchema.validate(req.body);
-    if (error) {
-      res.status(400).json({
-        success: false,
-        message: error.details[0].message,
-      });
-      return;
+    const { email, name } = req.body;
+
+    // Validate input
+    if (!email) return res.status(400).json({ success: false, message: 'Email required' });
+
+    // Check if user exists or create
+    let user = await User.findOne({ email });
+    if (!user) {
+      if (!name) return res.status(400).json({ success: false, message: 'Name required' });
+      user = new User({ email, name, signupMethod: 'email' });
     }
 
-    const { email, name, password } = value;
+    // Generate OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpExpires = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes expiry
 
-    // Check if user already exists
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      res.status(400).json({
-        success: false,
-        message: 'User already exists with this email',
-      });
-      return;
-    }
-
-    // Hash password
-    const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
-
-    // Create user
-    const user = new User({
-  email,
-  name,
-  password: hashedPassword,
-  signupMethod: 'email',  // ✅ now stored in DB
-});
-
+    user.otp = otp;
+    user.otpExpires = otpExpires;
     await user.save();
 
-    // Generate JWT token
-    const token = generateToken({
-      userId: user._id.toString(),
-      email: user.email,
-      signupMethod: 'email',
-    });
+    // Send OTP email (HTML)
+    const mailOptions = {
+      from: '"Highway App" <jayrana0909@gmail.com>', // Proper sender
+      to: email,
+      subject: 'Your OTP Code for Highway App',
+      html: `
+        <div style="font-family: Arial, sans-serif; text-align: center; padding: 20px;">
+          <h2 style="color: #333;">Your One-Time Password (OTP)</h2>
+          <p style="font-size: 16px;">Hi ${user.name},</p>
+          <p style="font-size: 18px; font-weight: bold; background: #f2f2f2; padding: 10px; display: inline-block;">
+            ${otp}
+          </p>
+          <p style="font-size: 14px; color: #555;">This OTP is valid for 5 minutes.</p>
+          <hr style="margin: 20px 0;">
+          <p style="font-size: 12px; color: #999;">If you did not request this, please ignore this email.</p>
+        </div>
+      `,
+    };
 
-    res.status(201).json({
-      success: true,
-      message: 'Account created successfully',
-      data: {
-        token,
-        user: {
-          _id: user._id,
-          email: user.email,
-          name: user.name,
-        },
-      },
-    });
+    const info = await transporter.sendMail(mailOptions);
+    console.log('Email sent info:', info);
+
+    res.status(200).json({ success: true, message: 'OTP sent' });
   } catch (error) {
-    console.error('Signup error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Internal server error',
-    });
+    console.error('Send OTP error:', error);
+    res.status(500).json({ success: false, message: 'Failed to send OTP' });
   }
 };
 
-
-// Login with email and password
-export const login = async (req: Request, res: Response): Promise<void> => {
+// ---------------------- VERIFY OTP ----------------------
+export const verifyOtp = async (req: Request, res: Response) => {
   try {
-    const { error, value } = loginSchema.validate(req.body);
-    if (error) {
-      res.status(400).json({
-        success: false,
-        message: error.details[0].message,
-      });
-      return;
-    }
+    const { error, value } = otpSchema.validate(req.body);
+    if (error) return res.status(400).json({ success: false, message: error.details[0].message });
 
-    const { email, password } = value;
-
+    const { email, otp } = value;
     const user = await User.findOne({ email });
-    if (!user) {
-      res.status(400).json({
-        success: false,
-        message: 'Invalid email or password',
-      });
-      return;
-    }
 
-    // Check password
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
-      res.status(400).json({
-        success: false,
-        message: 'Invalid email or password',
-      });
-      return;
-    }
+    if (!user || !user.otp || !user.otpExpires)
+      return res.status(400).json({ success: false, message: 'OTP not requested' });
 
-    // Generate JWT token
-    const token = generateToken({
-      userId: user._id.toString(),
-      email: user.email,
-      signupMethod: 'email',
-    });
+    if (user.otp !== otp || user.otpExpires < new Date())
+      return res.status(400).json({ success: false, message: 'Invalid or expired OTP' });
+
+    // Clear OTP
+    user.otp = null;
+    user.otpExpires = null;
+    await user.save();
+
+    // Generate JWT
+    const token = generateToken({ userId: user._id, email: user.email });
 
     res.status(200).json({
       success: true,
-      message: 'Login successful',
-      data: {
-        token,
-        user: {
-          _id: user._id,
-          email: user.email,
-          name: user.name,
-        },
-      },
+      message: 'OTP verified',
+      data: { token, user: { _id: user._id, email: user.email, name: user.name } },
     });
   } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Internal server error',
-    });
+    console.error('Verify OTP error:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
-
