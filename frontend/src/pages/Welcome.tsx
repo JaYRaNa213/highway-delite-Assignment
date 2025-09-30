@@ -55,8 +55,8 @@ const Welcome: React.FC = () => {
                 onClick={handleLogout}
                 className="btn btn-outline btn-sm"
               >
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
+                <LogOut className="h-4 w-4 mr-2 bg-red-600" />
+                <h5 className='text-black'>LOGOUT</h5>
               </button>
             </div>
           </div>
