@@ -33,7 +33,7 @@ app.use(
 
 // ✅ Define allowed origins
 // ✅ Get allowed origins from env
-const allowedOrigins = (process.env.ALLOWED_ORIGINS || "").split(",");
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || "http:/http://localhost:5173").split(",");
 
 app.use(
   cors({
@@ -76,6 +76,7 @@ app.use(
       .json({ success: false, message: err.message || 'Internal server error' });
   }
 );
+
 
 // Start
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
