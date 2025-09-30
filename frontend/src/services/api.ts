@@ -2,7 +2,7 @@ import axios, { AxiosResponse } from 'axios';
 import { AuthResponse, NotesResponse, NoteResponse } from '../types';
 
 // Use environment variable for API URL, fallback to localhost for development
-const API_BASE_URL = '' + (import.meta.env.VITE_API_URL || 'http://localhost:5000');
+const API_BASE_URL = '' + (import.meta.env.VITE_API_URL || 'https://highway-delite-note-taking-app.onrender.com/api');
 
 // Create axios instance
 const api = axios.create({

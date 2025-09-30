@@ -33,24 +33,12 @@ app.use(
 
 // ✅ Define allowed origins
 // ✅ Get allowed origins from env
-const allowedOrigins = (process.env.ALLOWED_ORIGINS || "http:/http://localhost:5173").split(",");
+const allowedOrigins = [
+  "https://highway-delite-assignment-ten.vercel.app",
+  "http://localhost:5173" // optional for dev
+];
+app.use(cors({ origin: allowedOrigins, credentials: true }));
 
-app.use(
-  cors({
-    origin: (origin, cb) => {
-      if (!origin) return cb(null, true); // allow Postman / curl
-      if (allowedOrigins.includes(origin)) {
-        return cb(null, true);
-      }
-      return cb(new Error("CORS: Not allowed"));
-    },
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
-
-app.options("*", cors());
 
 
 // Health check
