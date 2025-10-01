@@ -33,8 +33,8 @@ app.use(
 
 // -------------------- CORS --------------------
 const allowedOrigins = [
-  "http://localhost:5173",
-  process.env.ALLOWED_ORIGINS || "https://highway-delite-assignment-ten.vercel.app",
+  process.env.ALLOWED_ORIGINS || "https://highway-delite-assignment-ten.vercel.app/"
+ 
 ];
 
 app.use(
