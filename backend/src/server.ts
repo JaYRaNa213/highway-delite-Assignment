@@ -8,7 +8,7 @@ import dotenv from "dotenv";
 import connectDB from "./config/db";
 import authRoutes from "./routes/auth.routes";
 import notesRoutes from "./routes/notes.routes";
-import emailRoutes from "./routes/email.routes"; // adjust path
+// import emailRoutes from "./routes/email.routes"; // adjust path
 dotenv.config();
 
 const app = express();
@@ -59,7 +59,7 @@ app.get("/health", (req, res) =>
 app.use("/api/auth", authRoutes);
 app.use("/api/notes", notesRoutes);
 
-app.use("/api/email", emailRoutes);
+// app.use("/api/email", emailRoutes);
 
 // -------------------- 404 --------------------
 app.use("*", (req, res) =>

@@ -1,32 +1,34 @@
-import express from "express";
-import { sendTransactionalEmail } from "../services/mail.service";
-const router = express.Router();
+// import express from "express";
+// import { sendTransactionalEmail } from "../services/mail.service";
 
-// 🚀 Test email route
-router.post("/test-email", async (req, res) => {
-  try {
-    const { toEmail } = req.body;
+// const router = express.Router();
 
-    if (!toEmail) {
-      return res.status(400).json({ success: false, message: "toEmail is required" });
-    }
+// // 🚀 Test email route
+// router.post("/test-email", async (req, res) => {
+//   try {
+//     const { toEmail } = req.body;
 
-    const result = await sendTransactionalEmail({
-      toEmail,
-      subject: "🚀 Test Email from Highway Delite",
-      htmlContent: "<h1>Hello!</h1><p>This is a test email from Highway Delite backend.</p>",
-      textContent: "Hello! This is a test email from Highway Delite backend.",
-    });
+//     if (!toEmail) {
+//       return res.status(400).json({ success: false, message: "toEmail is required" });
+//     }
 
-    if (result.success) {
-      return res.json({ success: true, message: "✅ Email sent successfully", data: result.data });
-    } else {
-      return res.status(500).json({ success: false, message: "❌ Failed to send email", error: result.error });
-    }
-  } catch (err) {
-    console.error("❌ API Error:", err);
-    console.log("saale fhir aa gaya")
-  }
-});
+//     const result = await sendTransactionalEmail({
+//       toEmail,
+//       subject: "🚀 Test Email from Highway Delite",
+//       htmlContent: "<h1>Hello!</h1><p>This is a test email from Highway Delite backend.</p>",
+//       textContent: "Hello! This is a test email from Highway Delite backend.",
+//     });
 
-export default router;
+//     if (result.success) {
+//       return res.json({ success: true, message: "✅ Email sent successfully", data: result.data });
+//     } else {
+//       return res.status(500).json({ success: false, message: "❌ Failed to send email", error: result.error });
+//     }
+//   } catch (err) {
+//     console.error("❌ API Error:", err);
+//     // ✅ FIX: return a response for the catch block
+//     return res.status(500).json({ success: false, message: "Internal server error", error: err });
+//   }
+// });
+
+// export default router;
