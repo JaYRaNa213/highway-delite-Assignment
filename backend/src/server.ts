@@ -32,23 +32,29 @@ app.use(
 );
 
 // -------------------- CORS --------------------
-const allowedOrigins = [
-  process.env.ALLOWED_ORIGINS || "https://highway-delite-assignment-ten.vercel.app/"
+// const allowedOrigins = [
+//   process.env.ALLOWED_ORIGINS || "https://highway-delite-assignment-ten.vercel.app/"
  
-];
+// ];
 
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-    credentials: true,
-  })
-);
+// app.use(
+//   cors({
+//     origin: function (origin, callback) {
+//       if (!origin || allowedOrigins.includes(origin)) {
+//         callback(null, true);
+//       } else {
+//         callback(new Error("Not allowed by CORS"));
+//       }
+//     },
+//     credentials: true,
+//   })
+// );
+
+app.use(cors({
+  origin: "*",
+  credentials: true
+}));
+
 
 // -------------------- HEALTH CHECK --------------------
 app.get("/health", (req, res) =>
