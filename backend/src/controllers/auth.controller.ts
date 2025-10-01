@@ -1,13 +1,13 @@
-import { Request, Response } from 'express';
-import User from '../models/User';
-import { generateToken } from '../config/jwt';
-import Joi from 'joi';
-import { transporter } from '../config/mailer';
+import { Request, Response } from "express";
+import User from "../models/User";
+import { generateToken } from "../config/jwt";
+import Joi from "joi";
+import { sendTransactionalEmail } from "../services/mail.service";
 
 // ---------------------- VALIDATION SCHEMAS ----------------------
 const signupSchema = Joi.object({
   email: Joi.string().email().required(),
-  name: Joi.string().min(2).max(50).optional().allow(''),
+  name: Joi.string().min(2).max(50).optional().allow(""),
 });
 
 const otpSchema = Joi.object({
@@ -16,14 +16,15 @@ const otpSchema = Joi.object({
 });
 
 // ---------------------- SEND OTP ----------------------
-// ---------------------- SEND OTP ----------------------
 export const sendOtp = async (req: Request, res: Response): Promise<Response> => {
   try {
     const { email, name } = req.body;
 
     // Basic validation
     if (!email) {
-      return res.status(400).json({ success: false, message: "Email required" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Email required" });
     }
 
     // Check user
@@ -32,7 +33,9 @@ export const sendOtp = async (req: Request, res: Response): Promise<Response> =>
     if (!user) {
       // New user: require name for first signup
       if (!name || String(name).trim().length < 1) {
-        return res.status(400).json({ success: false, message: "Name required for signup" });
+        return res
+          .status(400)
+          .json({ success: false, message: "Name required for signup" });
       }
       user = new User({ email, name: name.trim(), signupMethod: "email" });
     }
@@ -45,12 +48,11 @@ export const sendOtp = async (req: Request, res: Response): Promise<Response> =>
     user.otpExpires = otpExpires;
     await user.save();
 
-    // Send OTP email
-    const mailOptions = {
-      from: `"Highway App" <jayrana0909@gmail.com>`,
-      to: email,
+    // Send OTP email via Brevo API
+    await sendTransactionalEmail({
+      toEmail: email,
       subject: "Your OTP Code for Highway App",
-      html: `
+      htmlContent: `
         <div style="font-family: Arial, sans-serif; text-align: center; padding: 20px;">
           <h2 style="color: #333;">Your One-Time Password (OTP)</h2>
           <p style="font-size: 16px;">Hi ${user.name || "User"},</p>
@@ -60,9 +62,7 @@ export const sendOtp = async (req: Request, res: Response): Promise<Response> =>
           <p style="font-size: 14px; color: #555;">This OTP is valid for 5 minutes.</p>
         </div>
       `,
-    };
-
-    await transporter.sendMail(mailOptions);
+    });
 
     return res.status(200).json({
       success: true,
@@ -70,25 +70,36 @@ export const sendOtp = async (req: Request, res: Response): Promise<Response> =>
     });
   } catch (error: any) {
     console.error("❌ Send OTP error:", error);
-    return res.status(500).json({ success: false, message: "Failed to send OTP" });
+    return res
+      .status(500)
+      .json({ success: false, message: "Failed to send OTP" });
   }
 };
 
-
 // ---------------------- VERIFY OTP ----------------------
-export const verifyOtp = async (req: Request, res: Response): Promise<Response> => {
+export const verifyOtp = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
   try {
     const { error, value } = otpSchema.validate(req.body);
-    if (error) return res.status(400).json({ success: false, message: error.details[0].message });
+    if (error)
+      return res
+        .status(400)
+        .json({ success: false, message: error.details[0].message });
 
     const { email, otp } = value;
     const user = await User.findOne({ email });
 
     if (!user || !user.otp || !user.otpExpires)
-      return res.status(400).json({ success: false, message: 'OTP not requested' });
+      return res
+        .status(400)
+        .json({ success: false, message: "OTP not requested" });
 
     if (user.otp !== otp || user.otpExpires < new Date())
-      return res.status(400).json({ success: false, message: 'Invalid or expired OTP' });
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid or expired OTP" });
 
     // Clear OTP after verification
     user.otp = null;
@@ -100,11 +111,16 @@ export const verifyOtp = async (req: Request, res: Response): Promise<Response> 
 
     return res.status(200).json({
       success: true,
-      message: 'OTP verified',
-      data: { token, user: { _id: user._id, email: user.email, name: user.name } },
+      message: "OTP verified",
+      data: {
+        token,
+        user: { _id: user._id, email: user.email, name: user.name },
+      },
     });
   } catch (error: any) {
-    console.error('❌ Verify OTP error:', error);
-    return res.status(500).json({ success: false, message: 'Internal server error' });
+    console.error("❌ Verify OTP error:", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error" });
   }
 };
