@@ -61,7 +61,7 @@ const NoteForm: React.FC<NoteFormProps> = ({ onNoteCreated, onClose }) => {
                   maxLength: { value: 200, message: 'Title must be less than 200 characters' }
                 })}
                 type="text"
-                className="input"
+                className="input text-black"
                 placeholder="Enter note title"
                 maxLength={200}
               />
@@ -81,7 +81,7 @@ const NoteForm: React.FC<NoteFormProps> = ({ onNoteCreated, onClose }) => {
                   required: 'Content is required',
                   maxLength: { value: 10000, message: 'Content must be less than 10000 characters' }
                 })}
-                className="input min-h-[200px] resize-none"
+                className="input min-h-[200px] resize-none text-black"
                 placeholder="Write your note content here..."
                 maxLength={10000}
               />

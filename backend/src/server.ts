@@ -34,8 +34,8 @@ app.use(
 // ✅ Define allowed origins
 // ✅ Get allowed origins from env
 const allowedOrigins = [
-  "https://highway-delite-assignment-ten.vercel.app",
-  "http://localhost:5173" // optional for dev
+  
+  "http://localhost:5173" 
 ];
 app.use(cors({ origin: allowedOrigins, credentials: true }));
 
